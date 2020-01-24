@@ -85,4 +85,5 @@ public class Person {
     public void setSalary(int salary) {
         this.salary = salary;
     }
+
 }
