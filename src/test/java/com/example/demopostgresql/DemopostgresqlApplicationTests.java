@@ -2,10 +2,13 @@ package com.example.demopostgresql;
 
 import com.example.demopostgresql.dao.PersonRepository;
 import com.example.demopostgresql.model.Person;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.json.JSONException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,11 +25,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,6 +51,9 @@ class DemopostgresqlApplicationTests {
 
     HttpHeaders headers = new HttpHeaders();
 
+
+    private ObjectMapper mapper;
+
     @LocalServerPort
     private int port;
 
@@ -58,6 +63,7 @@ class DemopostgresqlApplicationTests {
             .withDatabaseName("integration-tests-db")
             .withUsername("sa")
             .withPassword("sa");
+
 
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
@@ -94,16 +100,26 @@ class DemopostgresqlApplicationTests {
     @Test
     //RestTemplate you should use when you want to test Rest Client-side application
     //RestTemplate sends real HTTP requests to the endpoints.
-    public void testGetAllPersonsRestTemplate() throws JSONException {
+    public void testGetAllPersonsRestTemplate() throws JSONException, JsonProcessingException {
         HttpEntity<String> entity = new HttpEntity<String>(null, headers);
 
         ResponseEntity<String> response = restTemplate.exchange(
                 createURLWithPort("/persons/all"),
                 HttpMethod.GET, entity, String.class);
 
-        String expected = "[{\"id\":1,\"name\":\"Employee First\",\"age\":39,\"telephone\":\"0904567888\",\"email\":\"emailemployeefirst@email.cz\",\"salary\":3000},{\"id\":2,\"name\":\"Employee First\",\"age\":39,\"telephone\":\"0909867888\",\"email\":\"emailemployeesecond@email.cz\",\"salary\":1600},{\"id\":3,\"name\":\"Employee First Test\",\"age\":39,\"telephone\":\"0904567888\",\"email\":\"emailemployeefirst@email.cz\",\"salary\":1337},{\"id\":4,\"name\":\"Employee Second Test\",\"age\":39,\"telephone\":\"0904567888\",\"email\":\"emailemployeefirst@email.cz\",\"salary\":1338},{\"id\":5,\"name\":\"Employee Third Test\",\"age\":39,\"telephone\":\"0904567888\",\"email\":\"emailemployeefirst@email.cz\",\"salary\":1339},{\"id\":6,\"name\":\"Employee Fourth Test\",\"age\":39,\"telephone\":\"0904567888\",\"email\":\"emailemployeefirst@email.cz\",\"salary\":1340}]";
+        List<Person> all = personRepository.findAll();
 
-        JSONAssert.assertEquals(expected.toString(), response.getBody().toString(), false);
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Person> listPerson = objectMapper.readValue(response.getBody(), new TypeReference<List<Person>>() {
+        });
+
+        assertEquals(200, response.getStatusCodeValue());
+
+        assertEquals(listPerson.size(), all.size());
+
+        assertEquals(listPerson.get(1), all.get(1));
+
+
     }
 
     @Test

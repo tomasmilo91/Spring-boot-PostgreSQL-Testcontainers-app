@@ -86,4 +86,26 @@ public class Person {
         this.salary = salary;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Person) {
+            Person p = (Person) obj;
+            if (id == p.getId() && name.equals(p.getName()) && age == p.getAge() && telephone.equals(p.getTelephone()) && email.equals(p.getEmail()))
+                return true;
+            return false;
+        }
+        return super.equals(obj);
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                ", telephone='" + telephone + '\'' +
+                ", email='" + email + '\'' +
+                ", salary=" + salary +
+                '}';
+    }
 }
